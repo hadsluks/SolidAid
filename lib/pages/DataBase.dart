@@ -1,6 +1,5 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/material.dart';
 import 'package:urcab/pages/favRidesPage.dart';
 import 'package:urcab/pages/prvRidePage.dart';
 
@@ -35,6 +34,9 @@ class DBHelper {
         "CREATE TABLE HISTORY(PICKUP_ADD TEXT, PICKUP_LAT TEXT, PICKUP_LNG TEXT, DROP_ADD TEXT, DROP_LAT TEXT, DROP_LNG TEXT,BOOKED_DATE TEXT);");
 
     await db.execute("CREATE TABLE VIDEO_FAV(ID TEXT, TITLE TEXT)");
+
+    await db.execute("CREATE TABLE FIRST_INSTALL(FIRST BOOL)");
+    await db.execute("INSERT INTO FIRST_INSTALL(FIRST) VALUES(\'TRUE\')");
   }
 
   Future<void> addFav(FavRides fR) async {
@@ -71,7 +73,6 @@ class DBHelper {
     var dbClient = await db;
     await dbClient.rawInsert(
         "INSERT INTO VIDEO_FAV(ID, TITLE) VALUES(\'$iD\', \'$title\');");
-     
   }
 
   Future<void> deleteVideoFav(String iD, String title) async {
@@ -83,7 +84,17 @@ class DBHelper {
   Future<List<Map<String, dynamic>>> getVideoFav() async {
     var dbClient = await db;
     var list = (await dbClient.rawQuery("SELECT * FROM VIDEO_FAV")).toList();
-   
+
     return list;
+  }
+
+  Future<bool> firstInstall() async {
+    var dbClient = await db;
+    var list =
+        (await dbClient.rawQuery("SELECT * FROM FIRST_INSTALL")).toList();
+    if (list[0]['FIRST'] == 'TRUE') {
+      await dbClient.rawQuery("UPDATE FIRST_INSTALL SET FIRST=\'FALSE\'");
+    }
+    return list[0]['FIRST'] == 'TRUE';
   }
 }

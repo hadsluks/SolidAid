@@ -5,11 +5,17 @@ import 'package:urcab/pages/favRidesPage.dart';
 import 'package:urcab/pages/newRidePage.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:urcab/pages/entertainment.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:speech_recognition/speech_recognition.dart';
 import 'package:flare_flutter/flare_actor.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:urcab/pages/SetPickUpLocation.dart';
+import 'package:urcab/pages/entertainment.dart';
 
 //TODO vibration and toast feedback
+
+GlobalKey a = GlobalKey();
 
 class Home extends StatefulWidget {
   @override
@@ -21,19 +27,19 @@ class _HomeState extends State<Home> {
   int _sI = 1;
   List<BottomNavigationBarItem> bottomMenu = [
     BottomNavigationBarItem(
-      activeIcon: Icon(Icons.history, color: Color(0xff5F1063)),
-      icon: Icon(Icons.history, color: Color(0xff150316)),
+      activeIcon: Image.asset(
+        "lib/assets/yt.png",
+        height: 24,
+        width: 24,
+        colorBlendMode: BlendMode.overlay,
+      ), //Icon(Icons.play_circle_filled, color: Color(0xff5F1063)),
+      icon: Image.asset(
+        "lib/assets/yt.png",
+        height: 28,
+        width: 28,
+      ), //Icon(Icons.play_circle_outline, color: Color(0xff150316)),
       title: Text(
-        "Booked Rides",
-        style: TextStyle(fontSize: 12.0, color: Color(0xff5F1063)),
-      ),
-      backgroundColor: Color(0xffEDE4ED),
-    ),
-    BottomNavigationBarItem(
-      activeIcon: Icon(Icons.favorite, color: Color(0xff5F1063)),
-      icon: Icon(Icons.favorite_border, color: Color(0xff150316)),
-      title: Text(
-        "Favourite Ride",
+        "Videos",
         style: TextStyle(fontSize: 18.0, color: Color(0xff5F1063)),
       ),
       backgroundColor: Color(0xffEDE4ED),
@@ -48,11 +54,20 @@ class _HomeState extends State<Home> {
       backgroundColor: Color(0xffEDE4ED),
     ),
     BottomNavigationBarItem(
-      activeIcon: Icon(Icons.play_circle_filled, color: Color(0xff5F1063)),
-      icon: Icon(Icons.play_circle_outline, color: Color(0xff150316)),
+      activeIcon: Icon(Icons.favorite, color: Color(0xff5F1063)),
+      icon: Icon(Icons.favorite_border, color: Color(0xff150316)),
       title: Text(
-        "Entertainment",
+        "Favourite",
         style: TextStyle(fontSize: 18.0, color: Color(0xff5F1063)),
+      ),
+      backgroundColor: Color(0xffEDE4ED),
+    ),
+    BottomNavigationBarItem(
+      activeIcon: Icon(Icons.history, color: Color(0xff5F1063)),
+      icon: Icon(Icons.history, color: Color(0xff150316)),
+      title: Text(
+        "Booked Ride",
+        style: TextStyle(fontSize: 12.0, color: Color(0xff5F1063)),
       ),
       backgroundColor: Color(0xffEDE4ED),
     ),
@@ -68,13 +83,13 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     var aD = Root.of(context);
     Widget _bodyWidget() {
-      if (_sI == 0) {
+      if (_sI == 3) {
         return YourRides();
-      } else if (_sI == 1) {
-        return FavRidePage();
       } else if (_sI == 2) {
+        return FavRidePage();
+      } else if (_sI == 1) {
         return NewRide();
-      } else {
+      } else if (_sI == 0) {
         return Entertainment();
       }
     }
@@ -83,78 +98,88 @@ class _HomeState extends State<Home> {
       builder: Builder(builder: (context) {
         return SafeArea(
           child: Scaffold(
-            backgroundColor: Color(0xffEDE4ED),
+            //backgroundColor: Color(0xffEDE4ED),
             //TODO build body of homePage
             appBar: AppBar(
               centerTitle: true,
               elevation: 8.0,
               backgroundColor: Color(0xffDBC9DC),
               title: Text(
-                "UrCab",
+                _sI == 0 ? "Entertainment" : "UrCab",
                 style: TextStyle(
                     color: Color(0xff0A010B),
                     fontWeight: FontWeight.bold,
                     fontSize: 24.0),
               ),
               actions: <Widget>[
-                IconButton(
-                    icon: Icon(
-                      Icons.help,
-                      color: Color(0xff297F2F),
-                      size: 40.0,
-                    ),
-                    onPressed: () {
-                      switch (_sI) {
-                        case 0:
-                          {
-                            _toastUC();
-                            break;
+                _sI == 1
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.help,
+                          color: Color(0xff297F2F),
+                          size: 40.0,
+                        ),
+                        onPressed: () {
+                          switch (_sI) {
+                            case 0:
+                              {
+                                Root.of(context)
+                                    .toast("Under Implementation...");
+                                break;
+                              }
+                            case 2:
+                              {
+                                Root.of(context)
+                                    .toast("Under Implementation...");
+                                break;
+                              }
+                            case 1:
+                              {
+                                ShowCaseWidget.of(context).startShowCase([
+                                  aD.setPickupKey,
+                                  aD.setCurrentAsPickUP,
+                                  aD.setDestination,
+                                  aD.setCurrentAsDestination,
+                                  aD.bookNewRide,
+                                  aD.voiceButton
+                                ]);
+                                break;
+                              }
+                            case 3:
+                              {
+                                Root.of(context)
+                                    .toast("Under Implementation...");
+                                break;
+                              }
+                            default:
+                              {}
                           }
-                        case 1:
-                          {
-                            _toastUC();
-                            break;
-                          }
-                        case 2:
-                          {
-                            ShowCaseWidget.of(context).startShowCase([
-                              aD.setPickupKey,
-                              aD.setCurrentAsPickUP,
-                              aD.setDestination,
-                              aD.setCurrentAsDestination,
-                              aD.bookNewRide
-                            ]);
-                            break;
-                          }
-                        case 3:
-                          {
-                            _toastUC();
-                            break;
-                          }
-                        default:
-                          {}
-                      }
-                    }),
+                        },
+                      )
+                    : SizedBox(),
                 SizedBox(width: 8.0),
               ],
             ),
             body: _bodyWidget(),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: _sI != 0
+            floatingActionButton: _sI == 1
                 ? SizedBox(
                     height: 80.0,
                     width: 80.0,
-                    child: FloatingActionButton(
-                      onPressed: _launchRecordDialog,
-                      backgroundColor: Color(0xff340837),
-                      heroTag: "Voice",
-                      child: Icon(
-                        Icons.keyboard_voice,
-                        size: 50.0,
+                    child: Showcase(
+                      key: Root.of(context).voiceButton,
+                      description: "Click me and Speak",
+                      child: FloatingActionButton(
+                        onPressed: _launchRecordDialog,
+                        backgroundColor: Color(0xff340837),
+                        heroTag: "Voice",
+                        child: Icon(
+                          Icons.keyboard_voice,
+                          size: 50.0,
+                        ),
                       ),
-                    ),
-                  )
+                    ))
                 : null,
             bottomNavigationBar: BottomNavigationBar(
               elevation: 20.0,
@@ -173,35 +198,118 @@ class _HomeState extends State<Home> {
     );
   }
 
-  void _toastUC() {
-    Fluttertoast.showToast(
-        msg: "Under Implementation...",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Color(0xff381709),
-        textColor: Colors.white,
-        fontSize: 16.0);
-  }
-
   void _launchRecordDialog() async {
-    print(1);
+    PermissionStatus permStatus = await PermissionHandler()
+        .checkPermissionStatus(PermissionGroup.microphone);
+    if (permStatus.value == 0) {
+      await PermissionHandler()
+          .requestPermissions([PermissionGroup.microphone]);
+    }
     showDialog(
         barrierDismissible: false,
         context: context,
         builder: (BuildContext context) {
           //TODO start recording here
           Root.of(context).speechResult = "";
-          return new SpeechDialog();
+          return new SpeechDialog(
+            sI: _sI,
+          );
         });
   }
 }
 
 class SpeechDialog extends StatefulWidget {
+  int sI;
+  SpeechDialog({this.sI});
   @override
   _SpeechDialogState createState() => _SpeechDialogState();
 }
 
 class _SpeechDialogState extends State<SpeechDialog> {
+  void speechRes() async {
+    String res = Root.of(context).speechResult.toLowerCase();
+    if (Root.of(context).speechResult.toLowerCase().contains("pickup") ||
+        Root.of(context).speechResult.toLowerCase().contains("pick up")) {
+      if (Root.of(context).speechResult.toLowerCase().contains("as") ||
+          Root.of(context).speechResult.toLowerCase().contains("to")) {
+        Navigator.of(context).pop();
+        Root.of(context).setPickup = true;
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SetPickUpLocation(
+                      searchKey: Root.of(context)
+                              .speechResult
+                              .toLowerCase()
+                              .contains("as")
+                          ? res.split("as")[1]
+                          : res.split("to")[1],
+                    )));
+      } else {
+        Navigator.of(context).pop();
+        Root.of(context).setPickup = true;
+        Navigator.of(context).pushNamed('setpickuplocation');
+      }
+    } else if (Root.of(context)
+        .speechResult
+        .toLowerCase()
+        .contains("destination")) {
+      if (Root.of(context).pickUpLL != null) {
+        Navigator.of(context).pop();
+        Root.of(context).setPickup = false;
+        if (Root.of(context).speechResult.toLowerCase().contains("as") ||
+            Root.of(context).speechResult.toLowerCase().contains("to")) {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => SetPickUpLocation(
+                        searchKey: Root.of(context)
+                                .speechResult
+                                .toLowerCase()
+                                .contains("as")
+                            ? res.split("as")[1]
+                            : res.split("to")[1],
+                      )));
+        } else {
+          Navigator.of(context).pushNamed('setpickuplocation');
+        }
+      } else {
+        Root.of(context).toast("Set PickUp Location First");
+      }
+    } else if (Root.of(context).speechResult.toLowerCase().contains("book") ||
+        Root.of(context).speechResult.toLowerCase().contains("confirm")) {
+      if (Root.of(context).pickUpLL == null)
+        Root.of(context).toast("Set PickUp Location First");
+      else if (Root.of(context).dropOffLL == null)
+        Root.of(context).toast("Set Drop Location First");
+      else {
+        launch(
+            "https://m.uber.com/ul/?client_id=CI51-MLco_RasO6JzweBuw2XCCkm4XDw&action=setPickup&pickup[latitude]=${Root.of(context).pickUpLL.latitude}&pickup[longitude]=${Root.of(context).pickUpLL.longitude}&dropoff[latitude]=${Root.of(context).dropOffLL.latitude}&dropoff[longitude]=${Root.of(context).dropOffLL.longitude}");
+        Navigator.of(context).pop();
+      }
+    } else if (Root.of(context).speechResult.toLowerCase().contains("play")) {
+      String s = Root.of(context).speechResult.toLowerCase().split("play ")[1];
+      Navigator.of(context).pop();
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return Entertainment(
+          searchKey: s,
+        );
+      }));
+    } else {
+      FlutterTts tts = new FlutterTts();
+      await tts.setSpeechRate(0.8);
+      await tts.setPitch(1.2);
+      if (Root.of(context).speechResult == "" ||
+          Root.of(context).speechResult == null) {
+        tts.speak("Please, Say Something");
+        Root.of(context).toast(":(  Please, Say Something");
+      } else {
+        tts.speak("Couldn't understand! Please Say again...");
+        Root.of(context).toast(":( Please Say again...");
+      }
+    }
+  }
+
   SpeechRecognition _speech;
   bool _speechAvail = false, _speechListening = false;
   @override
@@ -257,7 +365,11 @@ class _SpeechDialogState extends State<SpeechDialog> {
       contentPadding: EdgeInsets.symmetric(vertical: 24.0),
       elevation: 10.0,
       title: Text(
-        "Listening...",
+        _speechListening
+            ? "Listening ..."
+            : (Root.of(context).speechResult.length > 0
+                ? "Is this OK?"
+                : "Please Retry....."),
         style: TextStyle(
             color: Color(0xff0A010B),
             fontWeight: FontWeight.bold,
@@ -275,7 +387,9 @@ class _SpeechDialogState extends State<SpeechDialog> {
                   fit: BoxFit.cover,
                   animation: "listening",
                 )
-              : Text(Root.of(context).speechResult),
+              : Text(Root.of(context).speechResult,
+                  style:
+                      TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700)),
         ),
       ),
       actions: <Widget>[
@@ -298,6 +412,21 @@ class _SpeechDialogState extends State<SpeechDialog> {
               ),
             ),
             RaisedButton(
+              child: Text(
+                "Retry",
+                style: TextStyle(
+                  color: Color(0xff150316),
+                ),
+              ),
+              color: Color(0xffDBC9DC),
+              onPressed: () async {
+                await _speech
+                    .listen(locale: "en_US")
+                    .catchError((e) => print("Error" + e.toString()))
+                    .then((res) => print("result: " + res.toString()));
+              },
+            ),
+            RaisedButton(
               color: Color(0xff448F49),
               onPressed: () async {
                 //TODO stop the recorder and save the recorded response
@@ -305,7 +434,7 @@ class _SpeechDialogState extends State<SpeechDialog> {
                 //TODO determine next action after inspecting the string
                 //TODO in case of success and failure show appropriate message
                 await _speech.stop();
-                Navigator.of(context).pop();
+                speechRes();
               },
               child: Text(
                 "Proceed",

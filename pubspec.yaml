@@ -17,6 +17,10 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
+  splashscreen: ^1.2.0
+  intro_slider: ^2.2.8
+  permission_handler: '^4.0.0'
+  flutter_tts: ^0.7.0
   speech_recognition: "^0.3.0"
   audioplayers: ^0.13.2
   auto_size_text: ^2.1.0
@@ -65,7 +69,15 @@ flutter:
     - lib/assets/notfound.flr
     - lib/assets/listening_4.flr
     - lib/assets/Loading3.flr
-
+    - lib/assets/SplashScreen.png
+    - lib/assets/Book.png
+    - lib/assets/Entertainment.png
+    - lib/assets/Speech.png
+    - lib/assets/Help.png
+    - lib/assets/active_yt.png
+    - lib/assets/inactive_yt.png
+    - lib/assets/yt.png
+    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

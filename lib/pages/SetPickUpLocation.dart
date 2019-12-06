@@ -7,6 +7,8 @@ import 'package:flutter_focus_watcher/flutter_focus_watcher.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class SetPickUpLocation extends StatefulWidget {
+  String searchKey;
+  SetPickUpLocation({this.searchKey});
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -18,11 +20,13 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
   static const String apiKey = "AIzaSyDTSNPxWWXuGqI1vBR-v-slXAdCB5tRgQE";
   LatLng selectedLocation;
   GoogleMapController _controller;
-  final place = new places.GoogleMapsPlaces(apiKey: "AIzaSyDTSNPxWWXuGqI1vBR-v-slXAdCB5tRgQE");
+  final place = new places.GoogleMapsPlaces(
+      apiKey: "AIzaSyDTSNPxWWXuGqI1vBR-v-slXAdCB5tRgQE");
   Set<Marker> markers = new Set<Marker>();
   List<ListTile> searchResults = [];
   bool showList = false;
   bool startSearching = false;
+  bool initialSearching = false;
   LatLng currentLocation;
 
   void setPickupMarker(LatLng loc) {
@@ -43,11 +47,50 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
     return currentLocation;
   }
 
+  Future<List<ListTile>> initialSearch(String search) async {
+    //startSearching = true;
+    initialSearching = false;
+    searchResults = [];
+    places.PlacesSearchResponse response = await place.searchByText(search);
+    if (response.isOkay) {
+      showList = true;
+      response.results.forEach((places.PlacesSearchResult res) {
+        searchResults.add(new ListTile(
+          onTap: () {
+            showList = false;
+            setPickupMarker(new LatLng(
+                res.geometry.location.lat, res.geometry.location.lng));
+            _controller.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  zoom: 16.0,
+                  target: selectedLocation,
+                ),
+              ),
+            );
+          },
+          title: Text(res.name),
+          subtitle: Text(res
+              .formattedAddress), //TODO add res.icon using image.network and using in Row
+        ));
+      });
+    } else {
+      print(response.errorMessage);
+    }
+    showList = searchResults.isNotEmpty;
+    startSearching = false;
+    return searchResults;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     setCurrentLocation();
+    if (widget.searchKey != null && widget.searchKey.length > 0) {
+      initialSearching = true;
+      //startSearching = true;
+    }
   }
 
   @override
@@ -62,7 +105,8 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
           position: Root.of(context).pickUpLL,
         ),
       );
-    } else if (!Root.of(context).setPickup && Root.of(context).dropOffLL != null) {
+    } else if (!Root.of(context).setPickup &&
+        Root.of(context).dropOffLL != null) {
       selectedLocation = Root.of(context).dropOffLL;
       markers.add(
         new Marker(
@@ -98,15 +142,19 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                     child: FloatingActionButton(
                       heroTag: "Current Location",
                       backgroundColor: Color(0xffE4EFE5),
-                      child: Icon(Icons.my_location,color: Color(0xff0A4A0E),),
+                      child: Icon(
+                        Icons.my_location,
+                        color: Color(0xff0A4A0E),
+                      ),
                       onPressed: () async {
                         setCurrentLocation();
                         setState(() {});
                         Location loc = new Location();
                         if (await loc.hasPermission()) {
                           setPickupMarker(currentLocation);
-                          _controller.animateCamera(CameraUpdate.newCameraPosition(
-                              CameraPosition(zoom: 16.0, target: currentLocation)));
+                          _controller.animateCamera(
+                              CameraUpdate.newCameraPosition(CameraPosition(
+                                  zoom: 16.0, target: currentLocation)));
                           selectedLocation = currentLocation;
                         } else {
                           await loc.requestPermission();
@@ -156,7 +204,9 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                             },
                             markers: markers,
                             initialCameraPosition: CameraPosition(
-                              target: selectedLocation != null ? selectedLocation : sn.data,
+                              target: selectedLocation != null
+                                  ? selectedLocation
+                                  : sn.data,
                               zoom: 16.0,
                             ),
                             onTap: (loc) {
@@ -171,13 +221,15 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                           return Center(
                               child: CircularProgressIndicator(
                             backgroundColor: Color(0xffDBC9DC),
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xff702A74)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xff702A74)),
                           ));
                       },
                     ),
                     Container(
                         margin: EdgeInsets.all(16.0),
-                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 8.0),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12.0),
                           color: Colors.white,
@@ -188,7 +240,8 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                             Showcase(
                               key: aD.mapSearchBar,
                               title: "Search for Pick Up location",
-                              description: "Say \"Search for {your search query here}\"",
+                              description:
+                                  "Say \"Search for {your search query here}\"",
                               child: Row(
                                 children: <Widget>[
                                   Expanded(
@@ -199,6 +252,9 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                                               true;*/ //TODO open the list again when text field is tapped
                                         });
                                       },
+                                      initialValue: widget.searchKey != null
+                                          ? widget.searchKey
+                                          : "",
                                       keyboardType: TextInputType.text,
                                       onChanged: (search) async {
                                         if (search.length >= 5) {
@@ -208,19 +264,23 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                                           places.PlacesSearchResponse response =
                                               await place.searchByText(search);
                                           if (response.isOkay) {
-                                            response.results
-                                                .forEach((places.PlacesSearchResult res) {
+                                            response.results.forEach(
+                                                (places.PlacesSearchResult
+                                                    res) {
                                               searchResults.add(new ListTile(
                                                 onTap: () {
                                                   showList = false;
                                                   setPickupMarker(new LatLng(
                                                       res.geometry.location.lat,
-                                                      res.geometry.location.lng));
+                                                      res.geometry.location
+                                                          .lng));
                                                   _controller.animateCamera(
-                                                    CameraUpdate.newCameraPosition(
+                                                    CameraUpdate
+                                                        .newCameraPosition(
                                                       CameraPosition(
                                                         zoom: 16.0,
-                                                        target: selectedLocation,
+                                                        target:
+                                                            selectedLocation,
                                                       ),
                                                     ),
                                                   );
@@ -249,7 +309,8 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                                         hintText: aD.setPickup
                                             ? "Search Pick Up Location..."
                                             : "Search Drop Off Location...",
-                                        contentPadding: EdgeInsets.fromLTRB(4, 12, 4, 0),
+                                        contentPadding:
+                                            EdgeInsets.fromLTRB(4, 12, 4, 0),
                                       ),
                                     ),
                                   ),
@@ -260,8 +321,11 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                                         size: 40.0,
                                       ),
                                       onPressed: () {
-                                        ShowCaseWidget.of(context).startShowCase(
-                                            [aD.mapSearchBar, aD.mapCurrentLocationKey]);
+                                        ShowCaseWidget.of(context)
+                                            .startShowCase([
+                                          aD.mapSearchBar,
+                                          aD.mapCurrentLocationKey
+                                        ]);
                                       })
                                   //TODO add voice button
                                 ],
@@ -276,19 +340,47 @@ class SetPickUpLocationState extends State<SetPickUpLocation> {
                                         child: CircularProgressIndicator(
                                           backgroundColor: Color(0xffDBC9DC),
                                           valueColor:
-                                              AlwaysStoppedAnimation<Color>(Color(0xff702A74)),
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Color(0xff702A74)),
                                         )),
                                   )
-                                : SizedBox(height: 8,),
+                                : SizedBox(
+                                    height: 8,
+                                  ),
                             showList
                                 ? Container(
-                                    height: MediaQuery.of(context).size.height / 2 - 50,
+                                    height:
+                                        MediaQuery.of(context).size.height / 2 -
+                                            50,
                                     child: ListView(
                                       shrinkWrap: true,
                                       children: searchResults,
                                     ),
                                   )
                                 : SizedBox(),
+                            initialSearching
+                                ? FutureBuilder(
+                                    future: initialSearch(widget.searchKey),
+                                    builder: (context, sp) {
+                                      if (sp.hasData) {
+                                        startSearching = false;
+                                        return Container(
+                                          height: MediaQuery.of(context)
+                                                      .size
+                                                      .height /
+                                                  2 -
+                                              50,
+                                          child: ListView(
+                                            shrinkWrap: true,
+                                            children: searchResults,
+                                          ),
+                                        );
+                                      } else {
+                                        return SizedBox();
+                                      }
+                                    },
+                                  )
+                                : SizedBox()
                           ],
                         )),
                   ],

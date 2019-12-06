@@ -13,13 +13,16 @@ class FavVideo {
 }
 
 class Entertainment extends StatefulWidget {
+  String searchKey;
+  Entertainment({this.searchKey});
   @override
-  _EntertainmentState createState() => _EntertainmentState();
+  EntertainmentState createState() => EntertainmentState();
 }
 
-class _EntertainmentState extends State<Entertainment> {
+class EntertainmentState extends State<Entertainment> {
   bool startSearching = false;
   bool showList = false;
+  bool initialSearch = false;
   List<YT_API> searchResults = [];
   List<FavVideo> favouriteVideos = [];
   YoutubeAPI ytapi = new YoutubeAPI("AIzaSyAvHXdOeoFw6TrzbZWpIxsmhH5HWReZXSA");
@@ -35,6 +38,26 @@ class _EntertainmentState extends State<Entertainment> {
       showList = searchResults.length > 0;
       startSearching = false;
     });
+  }
+
+  Future<List<YT_API>> search2(String query) async {
+    setState(() {
+      startSearching = true;
+    });
+    searchResults = await ytapi.search(query);
+    setState(() {
+      showList = searchResults.length > 0;
+      startSearching = false;
+    });
+    return searchResults;
+  }
+
+  void search1(String query) async {
+    print(1);
+    startSearching = true;
+    searchResults = await ytapi.search(query);
+    showList = searchResults.length > 0;
+    startSearching = false;
   }
 
   void getFav() async {
@@ -54,47 +77,67 @@ class _EntertainmentState extends State<Entertainment> {
     // TODO: implement initState
     super.initState();
     getFav();
+    initialSearch = widget.searchKey != null && widget.searchKey.length > 0;
   }
 
   @override
   Widget build(BuildContext context) {
     return FocusWatcher(
       child: Scaffold(
+        appBar: widget.searchKey != null && widget.searchKey.length > 0
+            ? AppBar(
+                centerTitle: true,
+                elevation: 8.0,
+                backgroundColor: Color(0xffDBC9DC),
+                title: Text(
+                  widget.searchKey.toString(),
+                  style: TextStyle(
+                      color: Color(0xff0A010B),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24.0),
+                ),
+              )
+            : null,
         body: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: TextFormField(
-                    onTap: () {
-                      setState(() {
-                        //TODO open the list again when text field is tapped
-                      });
-                    },
-                    onChanged: (s) {
-                      if (s.length > 5) search(s);
-                    },
-                    controller: _controller,
-                    keyboardType: TextInputType.text,
-                    decoration: InputDecoration(
-                      hintText: "Search music or video...",
-                      contentPadding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  Expanded(
+                    child: TextFormField(
+                      onTap: () {
+                        setState(() {
+                          //TODO open the list again when text field is tapped
+                        });
+                      },
+                      onChanged: (s) {
+                        if (s.length > 5) search(s);
+                      },
+                      controller: _controller,
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(
+                        hintText: "Search Latest Music or Video",
+                        contentPadding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.cancel),
-                  onPressed: () {
-                    setState(() {
-                      searchResults = [];
-                      showList = false;
-                      _controller.text = "";
-                    });
-                  },
-                ),
-                //TODO add voice button
-              ],
+                  IconButton(
+                    icon: Icon(Icons.cancel),
+                    onPressed: () {
+                      setState(() {
+                        searchResults = [];
+                        showList = false;
+                        _controller.text = "";
+                      });
+                    },
+                  ),
+                  //TODO add voice button
+                ],
+              ),
             ),
             SizedBox(
               height: 8,
@@ -110,23 +153,76 @@ class _EntertainmentState extends State<Entertainment> {
                     ),
                   )
                 : SizedBox(),
-            Expanded(
-              child: showList
-                  ? ListView(
-                      children: searchResults.map<Widget>((res) {
-                        return VideoCard(
-                          sr: res,
-                        );
-                      }).toList(),
-                    )
-                  : ListView(
-                      children: favouriteVideos.map<Widget>((res) {
-                        return VideoCard(
-                          fv: res,
-                        );
-                      }).toList(),
-                    ),
-            )
+            showList || favouriteVideos.length > 0 || initialSearch
+                ? Expanded(
+                    child: showList
+                        ? ListView(
+                            children: searchResults.map<Widget>((res) {
+                              return VideoCard(
+                                sr: res,
+                              );
+                            }).toList(),
+                          )
+                        : (favouriteVideos.length > 0
+                            ? ListView(
+                                children: favouriteVideos.map<Widget>((res) {
+                                  return VideoCard(
+                                    fv: res,
+                                  );
+                                }).toList(),
+                              )
+                            : (initialSearch
+                                ? FutureBuilder(
+                                    future: search2(widget.searchKey),
+                                    builder: (context, sp) {
+                                      if (sp.hasData) {
+                                        return ListView(
+                                          children:
+                                              searchResults.map<Widget>((res) {
+                                            return VideoCard(
+                                              sr: res,
+                                            );
+                                          }).toList(),
+                                        );
+                                      } else
+                                        return SizedBox();
+                                    },
+                                  )
+                                : SizedBox())),
+                  )
+                : SizedBox(),
+            showList || startSearching || favouriteVideos.length > 0
+                ? SizedBox()
+                : Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      SizedBox(
+                        height: 150,
+                        width: 150,
+                        child: FlareActor(
+                          "lib/assets/notfound.flr",
+                          fit: BoxFit.cover,
+                          animation: "not_found",
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8.0,
+                      ),
+                      SizedBox(
+                        width: 200,
+                        child: AutoSizeText(
+                          "No Faourite Videos.\nSearch for videos above or use mic.",
+                          textAlign: TextAlign.center,
+                          maxLines: 4,
+                          minFontSize: 22,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 24.0,
+                      ),
+                    ],
+                  ),
 
 /*
                         FutureBuilder(builder: (c, s) {
@@ -214,11 +310,11 @@ class _VideoCardState extends State<VideoCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
-              IconButton(
+              /* IconButton(
                 icon: audioPlaying ? Icon(Icons.pause) : Icon(Icons.music_note),
                 onPressed: () async {
                   print(widget.sr.url);
-                  /* var ext = YouTubeExtractor();
+                  var ext = YouTubeExtractor();
                   var musicUrl = await ext.getMediaStreamsAsync(widget.sr.id);
                   AudioPlayer ap = AudioPlayer();
                   if (audioPlaying)
@@ -227,19 +323,28 @@ class _VideoCardState extends State<VideoCard> {
                     await ap.play(musicUrl.audio.first.url);
                   setState(() {
                     audioPlaying = !audioPlaying;
-                  }); */
+                  });
                 },
-              ),
+              ), */
               IconButton(
                 icon: madeFav
-                    ? Icon(Icons.favorite)
-                    : Icon(Icons.favorite_border),
+                    ? Icon(
+                        Icons.favorite,
+                        color: Colors.pink,
+                      )
+                    : Icon(
+                        Icons.favorite_border,
+                        color: Colors.pink,
+                      ),
                 onPressed: () async {
-                  if (madeFav)
+                  if (madeFav) {
                     await db.deleteVideoFav(
                         widget.sr != null ? widget.sr.id : widget.fv.id,
-                        widget.sr != null ? widget.sr.title : widget.fv.title);
-                  else
+                        widget.sr != null
+                            ? widget.sr.title
+                            : widget.fv
+                                .title); // TODO remove favourite and do setState
+                  } else
                     await db.addVideoFav(
                         widget.sr != null ? widget.sr.id : widget.fv.id,
                         widget.sr != null ? widget.sr.title : widget.fv.title);

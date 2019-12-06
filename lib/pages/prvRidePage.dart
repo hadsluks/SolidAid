@@ -75,8 +75,8 @@ class _YourRidesState extends State<YourRides> {
                       child: AutoSizeText(
                         "There are no rides booked yet...",
                         textAlign: TextAlign.center,
-                        maxLines: 2,
-                        minFontSize: 20,
+                        maxLines: 3,
+                        minFontSize: 24,
                       ),
                     ),
 /*

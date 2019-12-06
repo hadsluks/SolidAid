@@ -6,12 +6,22 @@ import 'package:urcab/pages/bookRidePage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:urcab/pages/entertainment.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'pages/splashscreen.dart';
 
-void main() => SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
+void main() =>
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+        .then((_) {
       runApp(MyApp());
     });
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  
   @override
   Widget build(BuildContext context) {
     return Root(
@@ -24,9 +34,10 @@ class MyApp extends StatelessWidget {
           'newride': (BuildContext context) => NewRide(),
           'setpickuplocation': (BuildContext context) => SetPickUpLocation(),
           'bookride': (BuildContext context) => BookRide(),
-          'entertainment': (BuildContext x) => Entertainment()
+          'entertainment': (BuildContext context) => Entertainment(),
+          'splashscreen': (BuildContext context) => AppSplashScreen(),
         },
-        initialRoute: 'home',
+        initialRoute: 'splashscreen',
       ),
     );
   }
@@ -44,8 +55,9 @@ class Root extends InheritedWidget {
   bool setPickup = false;
   int tabIndex = 1;
   int selectedIndex = 2;
+  String videosearch;
   TabController bookRideController;
-  String speechResult="";
+  String speechResult = "";
   GlobalKey mapCurrentLocationKey = GlobalKey();
   GlobalKey mapSearchBar = GlobalKey();
   GlobalKey mapConfirmKey = GlobalKey();
@@ -56,6 +68,15 @@ class Root extends InheritedWidget {
   GlobalKey setRideType = GlobalKey();
   GlobalKey bookNewRide = GlobalKey();
   GlobalKey voiceButton = GlobalKey();
+  void toast(String message) {
+    Fluttertoast.showToast(
+        msg: message,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Color(0xff381709),
+        textColor: Colors.white,
+        fontSize: 16.0);
+  }
 
   static Root of(BuildContext context) {
     return context.inheritFromWidgetOfExactType(Root) as Root;
