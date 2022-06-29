@@ -20,7 +20,7 @@ class _AppSplashScreenState extends State<AppSplashScreen> {
   @override
   Widget build(BuildContext context) {
     return SplashScreen(
-      seconds: 3,
+      seconds: 1,
       photoSize: 125.0,
       loaderColor: Color(0xffDBC9DC),
       title: Text(

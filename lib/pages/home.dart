@@ -24,7 +24,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   //TODO build homepage
-  int _sI = 1;
+  int _sI = 0;
   List<BottomNavigationBarItem> bottomMenu = [
     BottomNavigationBarItem(
       activeIcon: Image.asset(
@@ -163,7 +163,7 @@ class _HomeState extends State<Home> {
             body: _bodyWidget(),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: _sI == 1
+            floatingActionButton: _sI == 0 || _sI == 1
                 ? SizedBox(
                     height: 80.0,
                     width: 80.0,

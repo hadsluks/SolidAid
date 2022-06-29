@@ -256,9 +256,23 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> {
   bool isPlaying = true;
-  bool audioPlaying = false;
+  bool audioPlaying = false, audioReading = false;
+  AudioPlayer ap = new AudioPlayer();
   var db = new DBHelper();
   bool madeFav;
+  var musicUrl;
+
+  Future loadAsAudio() async {
+    var ext = YouTubeExtractor();
+    musicUrl = await ext
+        .getMediaStreamsAsync(widget.sr != null ? widget.sr.id : widget.fv.id);
+    print("Here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    print(musicUrl.audio.first.url);
+    await ap.play(musicUrl.audio.first.url);
+    await ap.pause();
+    return musicUrl;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -310,22 +324,32 @@ class _VideoCardState extends State<VideoCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
-              /* IconButton(
-                icon: audioPlaying ? Icon(Icons.pause) : Icon(Icons.music_note),
-                onPressed: () async {
-                  print(widget.sr.url);
-                  var ext = YouTubeExtractor();
-                  var musicUrl = await ext.getMediaStreamsAsync(widget.sr.id);
-                  AudioPlayer ap = AudioPlayer();
-                  if (audioPlaying)
-                    await ap.pause();
-                  else
-                    await ap.play(musicUrl.audio.first.url);
-                  setState(() {
-                    audioPlaying = !audioPlaying;
-                  });
+              FutureBuilder(
+                future: loadAsAudio(),
+                builder: (c, sp) {
+                  if (sp.hasData || musicUrl != null) {
+                    return IconButton(
+                      icon: audioPlaying
+                          ? Icon(Icons.pause)
+                          : Icon(Icons.music_note),
+                      onPressed: () async {
+                        if (audioPlaying) {
+                          await ap.pause();
+                        } else {
+                          setState(() {
+                            audioReading = true;
+                          });
+                          await ap.play(musicUrl.audio.first.url);
+                        }
+                        setState(() {
+                          audioPlaying = !audioPlaying;
+                        });
+                      },
+                    );
+                  } else
+                    return CircularProgressIndicator();
                 },
-              ), */
+              ),
               IconButton(
                 icon: madeFav
                     ? Icon(
